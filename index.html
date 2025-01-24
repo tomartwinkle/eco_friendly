@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eco-Friendly Commute</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000000;
+      margin: 0;
+      padding: 0;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .container {
+      background-color: #40cf4c;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+    select, button {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #suggestion {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Eco-Friendly Commute</h1>
+    <p>Select a city and traffic condition to get the best eco-friendly commuting suggestion!</p>
+    
+    <label for="city">Select City:</label>
+    <select id="city">
+      <option value="Mumbai">Mumbai</option>
+      <option value="Delhi">Delhi</option>
+      <option value="Bangalore">Bangalore</option>
+      <option value="Kolkata">Kolkata</option>
+      <option value="Chennai">Chennai</option>
+    </select>
+    
+    <label for="trafficCondition">Select Traffic Condition:</label>
+    <select id="trafficCondition">
+      <option value="low">Low Traffic</option>
+      <option value="medium">Medium Traffic</option>
+      <option value="high">High Traffic</option>
+    </select>
+    
+    <button onclick="suggestCommute()">Get Suggestion</button>
+    
+    <div id="suggestion"></div>
+  </div>
+  
+  <script>
+    // Sample weather data for Indian cities
+    const weatherData = {
+      Mumbai: { condition: "rainy", temp: 30 },
+      Delhi: { condition: "clear", temp: 25 },
+      Bangalore: { condition: "clear", temp: 22 },
+      Kolkata: { condition: "rainy", temp: 28 },
+      Chennai: { condition: "rainy", temp: 32 }
+    };
+
+    function suggestCommute() {
+      const city = document.getElementById("city").value;
+      const trafficCondition = document.getElementById("trafficCondition").value;
+      const weatherCondition = weatherData[city].condition;
+      const temperature = weatherData[city].temp;
+      
+      let suggestion = `Current weather in ${city}: ${weatherCondition}, ${temperature}°C.\n`;
+
+      if (trafficCondition === "low") {
+        if (weatherCondition === "clear") {
+          suggestion += "It's a great day for walking or biking!";
+        } else if (weatherCondition === "rainy") {
+          suggestion += "Consider taking public transport for comfort.";
+        } else {
+          suggestion += "It might be snowy, so public transport is a safe option.";
+        }
+      } else if (trafficCondition === "medium") {
+        if (weatherCondition === "clear") {
+          suggestion += "Biking or using public transport is a good option!";
+        } else if (weatherCondition === "rainy") {
+          suggestion += "Public transport is the best eco-friendly choice.";
+        } else {
+          suggestion += "Take public transport to avoid slippery roads.";
+        }
+      } else { // High traffic
+        if (weatherCondition === "clear") {
+          suggestion += "Traffic is heavy. Use public transport or consider carpooling.";
+        } else if (weatherCondition === "rainy") {
+          suggestion += "Public transport is the safest and most eco-friendly option.";
+        } else {
+          suggestion += "Heavy traffic and bad weather = public transport or carpooling.";
+        }
+      }
+      
+      document.getElementById("suggestion").innerText = suggestion;
+    }
+  </script>
+</body>
+</html>
+
