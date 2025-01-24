@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accident Prone Areas</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyyAyxzjBMd5FgUCoWRpG335omtxh7woA"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+        .form-container {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Find Accident-Prone Areas</h2>
+        <label for="source">Source: </label>
+        <input type="text" id="source" placeholder="Enter source">
+        <br><br>
+        <label for="destination">Destination: </label>
+        <input type="text" id="destination" placeholder="Enter destination">
+        <br><br>
+        <button onclick="findAccidentProneAreas()">Find Areas</button>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        let map;
+        let directionsService;
+        let directionsRenderer;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 20.5937, lng: 78.9629 }, // Center of India
+                zoom: 6,
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+        }
+
+        async function findAccidentProneAreas() {
+            const source = document.getElementById("source").value;
+            const destination = document.getElementById("destination").value;
+
+            if (!source || !destination) {
+                alert("Please enter both source and destination.");
+                return;
+            }
+
+            // Call the backend API to get accident-prone areas
+            try {
+                const response = await fetch("http://127.0.0.1:5000/get-accident-prone-areas-csv", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ source, destination }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error}`);
+                    return;
+                }
+
+                const csvData = await response.text();
+                const accidentAreas = parseCSV(csvData);
+
+                // Display the route and accident-prone areas on the map
+                displayRouteAndAccidents(source, destination, accidentAreas);
+            } catch (error) {
+                console.error("Error fetching accident-prone areas:", error);
+                alert("An error occurred. Please try again.");
+            }
+        }
+
+        function parseCSV(csvData) {
+            const rows = csvData.split("\n");
+            const result = [];
+            const headers = rows[0].split(",");
+
+            for (let i = 1; i < rows.length; i++) {
+                if (!rows[i].trim()) continue; // Skip empty rows
+                const values = rows[i].split(",");
+                const areaData = {};
+                headers.forEach((header, index) => {
+                    areaData[header.trim()] = values[index].trim();
+                });
+                result.push(areaData);
+            }
+            return result;
+        }
+
+        function displayRouteAndAccidents(source, destination, accidentAreas) {
+            // Display the route
+            directionsService.route(
+                {
+                    origin: source,
+                    destination: destination,
+                    travelMode: "DRIVING",
+                },
+                (result, status) => {
+                    if (status === "OK") {
+                        directionsRenderer.setDirections(result);
+                    } else {
+                        alert("Failed to display the route. Please try again.");
+                        console.error("Directions request failed:", status);
+                    }
+                }
+            );
+
+            // Add markers for accident-prone areas
+            accidentAreas.forEach((area) => {
+                const lat = parseFloat(area.latitude);
+                const lng = parseFloat(area.longitude);
+                const marker = new google.maps.Marker({
+                    position: { lat, lng },
+                    map,
+                    title: `${area.area} (Accidents: ${area.accident_count})`,
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<b>${area.area}</b><br>Accidents: ${area.accident_count}`,
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(map, marker);
+                });
+            });
+        }
+
+        // Initialize the map
+        initMap();
+    </script>
+</body>
+</html>
